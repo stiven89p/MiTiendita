@@ -1,13 +1,8 @@
 from fastapi import FastAPI
-
-app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+from db import create_tables
+from routers import categoria
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+app = FastAPI(lifespan=create_tables,title="API de Gestión de Categorías", version="1.0.0")
+
+app.include_router(categoria.router)
