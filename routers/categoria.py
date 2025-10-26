@@ -29,14 +29,14 @@ async def crear_categoria(session: SessionDep,
     session.refresh(nueva_categoria)
     return nueva_categoria
 
-@router.get("/", response_model=List[CategoriaLeer])
+@router.get("/", response_model=List[Categoria])
 async def leer_categorias(session: SessionDep):
     categorias = session.query(Categoria).all()
     if not categorias:
         raise HTTPException(status_code=404, detail="No se encontraron categorías")
     return categorias
 
-@router.get("/{categoria_id}", response_model=CategoriaLeer)
+@router.get("/{categoria_id}", response_model=Categoria)
 async def leer_categoria(categoria_id: int, session: SessionDep):
     categoria = session.get(Categoria, categoria_id)
     if not categoria:
@@ -67,7 +67,7 @@ async def actualizar_categoria(categoria_id: int,
     return categoria
 
 
-@router.delete("/{categoria_id}", response_model=CategoriaLeer)
+@router.delete("/{categoria_id}", response_model=Categoria)
 async def eliminar_categoria(categoria_id: int, session: SessionDep):
     categoria = session.get(Categoria, categoria_id)
     if not categoria:
