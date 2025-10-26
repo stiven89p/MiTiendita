@@ -26,6 +26,9 @@ async def crear_producto(session: SessionDep,
         stock=stock,
         categoria_id=categoria_id,
     )
+    productos_comprobacion = session.query(Producto).filter(Producto.nombre==nuevo_producto.nombre).all()
+    if productos_comprobacion:
+        raise HTTPException(status_code=400, detail="El producto con ese nombre ya existe")
     session.add(nuevo_producto)
     session.commit()
     session.refresh(nuevo_producto)
@@ -34,6 +37,8 @@ async def crear_producto(session: SessionDep,
 @router.get("/", response_model=List[ProductoLeer])
 async def leer_productos(session: SessionDep):
     productos = session.query(Producto).all()
+    if not productos:
+        raise HTTPException(status_code=404, detail="No se encontraron productos")
     return productos
 
 @router.get("/{producto_id}/", response_model=Producto)
@@ -46,11 +51,15 @@ async def leer_producto(producto_id: int, session: SessionDep):
 @router.get("/{categoria_id}/", response_model=List[Producto])
 async def leer_productos_por_categoria(categoria_id: int, session: SessionDep):
     productos = session.query(Producto).filter(Producto.categoria_id==categoria_id).all()
+    if not productos:
+        raise HTTPException(status_code=404, detail="No se encontraron productos para esta categoria")
     return productos
 
 @router.get("/activo/{activo}/", response_model=List[Producto])
 async def leer_productos_por_categoria(activo: bool, session: SessionDep):
     productos = session.query(Producto).filter(Producto.activo == activo).all()
+    if not productos:
+        raise HTTPException(status_code=404, detail="No se encontraron productos con este estado")
     return productos
 
 
