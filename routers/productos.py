@@ -36,7 +36,7 @@ async def leer_productos(session: SessionDep):
     productos = session.query(Producto).all()
     return productos
 
-@router.get("/{producto_id}", response_model=Producto)
+@router.get("/{producto_id}/", response_model=Producto)
 async def leer_producto(producto_id: int, session: SessionDep):
     producto = session.get(Producto, producto_id)
     if not producto:
@@ -48,10 +48,11 @@ async def leer_productos_por_categoria(categoria_id: int, session: SessionDep):
     productos = session.query(Producto).filter(Producto.categoria_id==categoria_id).all()
     return productos
 
-@router.get("/{activo}/", response_model=List[Producto])
+@router.get("/activo/{activo}/", response_model=List[Producto])
 async def leer_productos_por_categoria(activo: bool, session: SessionDep):
-    productos = session.query(Producto).filter(Producto.activo==activo).all()
+    productos = session.query(Producto).filter(Producto.activo == activo).all()
     return productos
+
 
 @router.put("/{producto_id}", response_model=Producto)
 async def actualizar_producto(producto_id: int,
