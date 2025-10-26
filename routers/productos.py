@@ -3,6 +3,7 @@ from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, HTTPException, Form
 from db import SessionDep
 from modelos.productos import Producto, ProductoActualizar, ProductoLeer
+from modelos.categoria import Categoria
 
 router = APIRouter(
     prefix="/productos",
@@ -16,8 +17,15 @@ async def crear_producto(session: SessionDep,
                          activo: bool = Form(True),
                          precio: float = Form(None),
                          stock: int = Form(None),
-                         categoria_id: int = Form(None)
+                         categoria_id: int = Form(...)
                          ):
+    if stock<0:
+        raise HTTPException(status_code=400, detail="El stock no puede ser negativo")
+
+    categoria = session.get(Categoria, categoria_id)
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
     nuevo_producto = Producto(
         nombre=nombre,
         descripcion=descripcion,
@@ -36,7 +44,7 @@ async def crear_producto(session: SessionDep,
 
 @router.get("/", response_model=List[ProductoLeer])
 async def leer_productos(session: SessionDep):
-    productos = session.query(Producto).all()
+    productos = session.query(Producto).filter(Producto.activo==True).all()
     if not productos:
         raise HTTPException(status_code=404, detail="No se encontraron productos")
     return productos

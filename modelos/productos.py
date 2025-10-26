@@ -10,7 +10,7 @@ class ProductoBase(SQLModel):
     activo: bool = True
     precio: Optional[float] = None
     stock: Optional[int] = None
-    categoria_id: Optional[int] = Field(default=None, foreign_key="categoria.categoria_id")
+    categoria_id: int = Field(default=None, foreign_key="categoria.categoria_id")
 
 class Producto(ProductoBase, table=True):
     producto_id: Optional[int] = Field(default=None, primary_key=True)
