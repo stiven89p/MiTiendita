@@ -80,27 +80,29 @@ async def actualizar_producto(producto_id: int,
                                 precio: float = Form(None),
                                 stock: int = Form(None),
                                 ):
-        producto = session.get(Producto, producto_id)
-        if not producto:
-            raise HTTPException(status_code=404, detail="Producto no encontrado")
+    if stock < 0:
+        raise HTTPException(status_code=400, detail="El stock no puede ser negativo")
+    producto = session.get(Producto, producto_id)
+    if not producto:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-        if nombre is not None:
-            producto.nombre = nombre
-        if descripcion is not None:
-            producto.descripcion = descripcion
-        if activo is not None:
-            producto.activo = activo
-        if precio is not None:
-            producto.precio = precio
-        if stock is not None:
-            producto.stock = stock
+    if nombre is not None:
+        producto.nombre = nombre
+    if descripcion is not None:
+        producto.descripcion = descripcion
+    if activo is not None:
+        producto.activo = activo
+    if precio is not None:
+        producto.precio = precio
+    if stock is not None:
+        producto.stock = stock
 
-        producto.fecha_actualizacion = datetime.now(timezone(timedelta(hours=-5)))
+    producto.fecha_actualizacion = datetime.now(timezone(timedelta(hours=-5)))
 
-        session.add(producto)
-        session.commit()
-        session.refresh(producto)
-        return producto
+    session.add(producto)
+    session.commit()
+    session.refresh(producto)
+    return producto
 
 @router.delete("/{producto_id}", response_model=ProductoLeer)
 async def eliminar_producto(producto_id: int, session: SessionDep):
