@@ -11,6 +11,7 @@ class CategoriaBase(SQLModel):
 
 class Categoria(CategoriaBase, table=True):
     categoria_id: Optional[int] = Field(default=None, primary_key=True)
+    productos: List["Producto"] = Relationship(back_populates="categoria")
 
 
 class CategoriaActualizar(SQLModel):
@@ -24,3 +25,5 @@ class CategoriaLeer(CategoriaBase):
 
 class CategoriaEliminar(CategoriaBase):
     activo: bool = False
+
+from modelos.productos import Producto
