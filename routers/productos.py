@@ -93,7 +93,7 @@ async def leer_productos_por_precio(
     if not productos:
         raise HTTPException(
             status_code=404,
-            detail=f"No se encontraron productos entre {precio_min} y {precio_max}",
+            detail=f"No se encontraron productos entre {stock_min} y {stock_max}",
         )
     return productos
 
@@ -104,7 +104,7 @@ async def leer_producto(producto_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
 
-@router.get("/{categoria_id}/", response_model=List[Producto])
+@router.get("/categoria/{categoria_id}/", response_model=List[Producto])
 async def leer_productos_por_categoria(categoria_id: int, session: SessionDep):
     productos = session.query(Producto).filter(Producto.categoria_id==categoria_id).all()
     if not productos:
@@ -129,7 +129,7 @@ async def actualizar_producto(producto_id: int,
                                 precio: float = Form(None),
                                 stock: int = Form(None),
                                 ):
-    if stock < 0:
+    if stock is int and stock < 0:
         raise HTTPException(status_code=400, detail="El stock no puede ser negativo")
     producto = session.get(Producto, producto_id)
     if not producto:
