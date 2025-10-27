@@ -58,8 +58,8 @@ async def leer_productos(session: SessionDep):
 @router.get("/precio/", response_model=List[Producto])
 async def leer_productos_por_precio(
     session: SessionDep,
-    precio_min: int = Query(..., gt=0, description="Precio mínimo del rango"),
-    precio_max: int = Query(..., gt=0, description="Precio máximo del rango")
+    precio_min: int = Query(..., gt=0),
+    precio_max: int = Query(..., gt=0)
 ):
     if precio_min > precio_max:
         raise HTTPException(
@@ -67,6 +67,27 @@ async def leer_productos_por_precio(
         )
     consulta = select(Producto).where(
         Producto.precio.between(precio_min, precio_max)
+    )
+    productos = session.exec(consulta).all()
+    if not productos:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontraron productos entre {precio_min} y {precio_max}",
+        )
+    return productos
+
+@router.get("/stock/", response_model=List[Producto])
+async def leer_productos_por_precio(
+    session: SessionDep,
+    stock_min: int = Query(..., gt=0),
+    stock_max: int = Query(..., gt=0)
+):
+    if stock_min > stock_max:
+        raise HTTPException(
+            status_code=400, detail="El stock mínimo no puede ser mayor que el stock máximo"
+        )
+    consulta = select(Producto).where(
+        Producto.stock.between(stock_min, stock_max)
     )
     productos = session.exec(consulta).all()
     if not productos:
