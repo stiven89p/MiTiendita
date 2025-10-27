@@ -1,6 +1,7 @@
 from typing import List
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, HTTPException, Form
+from sqlmodel import select
+from fastapi import APIRouter, HTTPException, Form, Query
 from db import SessionDep
 from modelos.productos import Producto, ProductoActualizar, ProductoLeer
 from modelos.categoria import Categoria
@@ -42,11 +43,37 @@ async def crear_producto(session: SessionDep,
     session.refresh(nuevo_producto)
     return nuevo_producto
 
-@router.get("/", response_model=List[ProductoLeer])
+@router.get("/", response_model=List[Producto])
 async def leer_productos(session: SessionDep):
-    productos = session.query(Producto).filter(Producto.activo==True).all()
+    productos = (
+        session.query(Producto)
+        .join(Categoria)
+        .filter(Producto.activo == True, Categoria.activo == True)
+        .all()
+    )
     if not productos:
         raise HTTPException(status_code=404, detail="No se encontraron productos")
+    return productos
+
+@router.get("/precio/", response_model=List[Producto])
+async def leer_productos_por_precio(
+    session: SessionDep,
+    precio_min: int = Query(..., gt=0, description="Precio mínimo del rango"),
+    precio_max: int = Query(..., gt=0, description="Precio máximo del rango")
+):
+    if precio_min > precio_max:
+        raise HTTPException(
+            status_code=400, detail="El precio mínimo no puede ser mayor que el precio máximo"
+        )
+    consulta = select(Producto).where(
+        Producto.precio.between(precio_min, precio_max)
+    )
+    productos = session.exec(consulta).all()
+    if not productos:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontraron productos entre {precio_min} y {precio_max}",
+        )
     return productos
 
 @router.get("/{producto_id}/", response_model=Producto)
@@ -71,7 +98,8 @@ async def leer_productos_por_categoria(activo: bool, session: SessionDep):
     return productos
 
 
-@router.put("/{producto_id}", response_model=Producto)
+
+@router.put("/{producto_id}/", response_model=Producto)
 async def actualizar_producto(producto_id: int,
                                 session: SessionDep,
                                 nombre: str = Form(None),
