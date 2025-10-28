@@ -3,6 +3,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 from fastapi import APIRouter,HTTPException, Form
 from db import SessionDep
+from modelos.categoria import Categoria
 from modelos.productos import Producto
 from modelos.venta import Venta, VentaItem, VentaResponse
 
@@ -28,6 +29,15 @@ async def agregar_item_venta(
     cantidad: int = Form(...),
     session: SessionDep = SessionDep(),
 ):
+    categoria = (
+        session.query(Producto)
+        .join(Categoria)
+        .filter(Producto.activo == True, Categoria.activo == True)
+        .all()
+    )
+    if not categoria:
+        raise HTTPException(status_code=404, detail="No se encontraron productos activos con categoría activa")
+
     venta = session.get(Venta, venta_id)
     if not venta:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
