@@ -21,5 +21,27 @@ class Venta(SQLModel, table=True):
 
     items: List[VentaItem] = Relationship(back_populates="venta")
 
+class ProductoResponse(SQLModel):
+    producto_id: int
+    nombre: str
+    descripcion: Optional[str]
+    precio: Optional[float]
+    stock: Optional[int]
+
+
+class VentaItemResponse(SQLModel):
+    id: int
+    cantidad: int
+    precio_unitario: int
+    producto: Optional[ProductoResponse]
+
+
+class VentaResponse(SQLModel):
+    venta_id: int
+    fecha_venta: datetime
+    total: int
+    items: List[VentaItemResponse]
+
+
 
 from modelos.productos import Producto
