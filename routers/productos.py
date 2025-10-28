@@ -16,16 +16,45 @@ async def crear_producto(session: SessionDep,
                          nombre: str = Form(...),
                          descripcion: str = Form(None),
                          activo: bool = Form(True),
-                         precio: float = Form(None),
+                         precio: int = Form(None),
                          stock: int = Form(None),
                          categoria_id: int = Form(...)
                          ):
-    if stock<0:
+    """
+       Crear un nuevo producto.
+
+       Registra un nuevo producto en la base de datos, asociado a una categoría existente y activa.
+       Verifica que no exista otro producto con el mismo nombre y que los valores de stock sean válidos.
+
+       Args:
+           session (SessionDep): Dependencia que provee la sesión de la base de datos.
+           nombre (str): Nombre del producto. Obligatorio.
+           descripcion (str | None): Descripción opcional del producto.
+           activo (bool): Estado activo del producto. Por defecto `True`.
+           precio (int | None): Precio del producto.
+           stock (int | None): Cantidad disponible en inventario. Debe ser mayor o igual a 0.
+           categoria_id (int): ID de la categoría a la que pertenece el producto.
+
+       Returns:
+           Producto: Instancia del producto recién creado.
+
+       Raises:
+           HTTPException: 400 si el stock es negativo.
+           HTTPException: 404 si la categoría no existe.
+           HTTPException: 400 si la categoría está inactiva.
+           HTTPException: 400 si ya existe un producto con el mismo nombre.
+       """
+    if stock is not None and stock < 0:
         raise HTTPException(status_code=400, detail="El stock no puede ser negativo")
 
     categoria = session.get(Categoria, categoria_id)
+
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
+    if not categoria.activo:
+        raise HTTPException(status_code=400, detail="La categoría está inactiva")
+
 
     nuevo_producto = Producto(
         nombre=nombre,
@@ -51,6 +80,20 @@ async def leer_productos(session: SessionDep):
         .filter(Producto.activo == True, Categoria.activo == True)
         .all()
     )
+    """
+        Leer productos activos.
+
+        Recupera todos los productos activos cuyas categorías también estén activas.
+
+        Args:
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+        Returns:
+            List[Producto]: Lista de productos activos con categorías activas.
+
+        Raises:
+            HTTPException: 404 si no se encuentran productos.
+        """
     if not productos:
         raise HTTPException(status_code=404, detail="No se encontraron productos")
     return productos
@@ -60,7 +103,24 @@ async def leer_productos_por_precio(
     session: SessionDep,
     precio_min: int = Query(..., gt=0),
     precio_max: int = Query(..., gt=0)
-):
+    ):
+    """
+        Leer productos por rango de precios.
+
+        Devuelve todos los productos cuyo precio se encuentre entre los valores mínimos y máximos especificados.
+
+        Args:
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+            precio_min (int): Valor mínimo del rango de precios. Debe ser mayor que 0.
+            precio_max (int): Valor máximo del rango de precios. Debe ser mayor que 0.
+
+        Returns:
+            List[Producto]: Lista de productos cuyo precio está dentro del rango.
+
+        Raises:
+            HTTPException: 400 si `precio_min` es mayor que `precio_max`.
+            HTTPException: 404 si no se encuentran productos en el rango indicado.
+        """
     if precio_min > precio_max:
         raise HTTPException(
             status_code=400, detail="El precio mínimo no puede ser mayor que el precio máximo"
@@ -77,11 +137,28 @@ async def leer_productos_por_precio(
     return productos
 
 @router.get("/stock/", response_model=List[Producto])
-async def leer_productos_por_precio(
+async def leer_productos_por_stock(
     session: SessionDep,
     stock_min: int = Query(..., gt=0),
     stock_max: int = Query(..., gt=0)
-):
+    ):
+    """
+        Leer productos por rango de stock.
+
+        Devuelve todos los productos cuyo stock esté dentro del rango especificado.
+
+        Args:
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+            stock_min (int): Valor mínimo del stock. Debe ser mayor que 0.
+            stock_max (int): Valor máximo del stock. Debe ser mayor que 0.
+
+        Returns:
+            List[Producto]: Lista de productos con stock dentro del rango.
+
+        Raises:
+            HTTPException: 400 si `stock_min` es mayor que `stock_max`.
+            HTTPException: 404 si no se encuentran productos en el rango indicado.
+        """
     if stock_min > stock_max:
         raise HTTPException(
             status_code=400, detail="El stock mínimo no puede ser mayor que el stock máximo"
@@ -98,7 +175,22 @@ async def leer_productos_por_precio(
     return productos
 
 @router.get("/{producto_id}/", response_model=Producto)
-async def leer_producto(producto_id: int, session: SessionDep):
+async def leer_producto_por_id(producto_id: int, session: SessionDep):
+    """
+        Leer un producto por ID.
+
+        Recupera un producto específico a partir de su identificador.
+
+        Args:
+            producto_id (int): ID del producto a consultar.
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+        Returns:
+            Producto: Instancia del producto correspondiente.
+
+        Raises:
+            HTTPException: 404 si el producto no existe.
+        """
     producto = session.get(Producto, producto_id)
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -106,13 +198,43 @@ async def leer_producto(producto_id: int, session: SessionDep):
 
 @router.get("/categoria/{categoria_id}/", response_model=List[Producto])
 async def leer_productos_por_categoria(categoria_id: int, session: SessionDep):
+    """
+        Leer productos por categoría.
+
+        Obtiene todos los productos pertenecientes a una categoría específica.
+
+        Args:
+            categoria_id (int): ID de la categoría a consultar.
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+        Returns:
+            List[Producto]: Lista de productos asociados a la categoría.
+
+        Raises:
+            HTTPException: 404 si no se encuentran productos para la categoría indicada.
+        """
     productos = session.query(Producto).filter(Producto.categoria_id==categoria_id).all()
     if not productos:
         raise HTTPException(status_code=404, detail="No se encontraron productos para esta categoria")
     return productos
 
 @router.get("/activo/{activo}/", response_model=List[Producto])
-async def leer_productos_por_categoria(activo: bool, session: SessionDep):
+async def leer_productos_por_estado(activo: bool, session: SessionDep):
+    """
+        Leer productos por estado activo.
+
+        Recupera todos los productos que coinciden con el estado de actividad indicado.
+
+        Args:
+            activo (bool): Estado de los productos a consultar.
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+        Returns:
+            List[Producto]: Lista de productos con el estado solicitado.
+
+        Raises:
+            HTTPException: 404 si no se encuentran productos con ese estado.
+        """
     productos = session.query(Producto).filter(Producto.activo == activo).all()
     if not productos:
         raise HTTPException(status_code=404, detail="No se encontraron productos con este estado")
@@ -126,12 +248,36 @@ async def actualizar_producto(producto_id: int,
                                 nombre: str = Form(None),
                                 descripcion: str = Form(None),
                                 activo: bool = Form(None),
-                                precio: float = Form(None),
+                                precio: int = Form(None),
                                 stock: int = Form(None),
                                 ):
-    if stock is int and stock < 0:
+    """
+       Actualizar un producto existente.
+
+       Modifica los campos proporcionados (nombre, descripción, activo, precio, stock) del producto especificado.
+       Solo se actualizan los campos que no sean `None`. Actualiza además la fecha de modificación.
+
+       Args:
+           producto_id (int): ID del producto a actualizar.
+           session (SessionDep): Dependencia que provee la sesión de la base de datos.
+           nombre (str | None): Nuevo nombre. Si es `None`, no se modifica.
+           descripcion (str | None): Nueva descripción. Si es `None`, no se modifica.
+           activo (bool | None): Nuevo estado. Si es `None`, no se modifica.
+           precio (int | None): Nuevo precio. Si es `None`, no se modifica.
+           stock (int | None): Nuevo valor de stock. Si es `None`, no se modifica.
+
+       Returns:
+           Producto: Instancia del producto actualizada.
+
+       Raises:
+           HTTPException: 400 si el stock es negativo.
+           HTTPException: 404 si el producto no existe.
+       """
+    if stock is not None and stock < 0:
         raise HTTPException(status_code=400, detail="El stock no puede ser negativo")
+
     producto = session.get(Producto, producto_id)
+
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
@@ -155,6 +301,21 @@ async def actualizar_producto(producto_id: int,
 
 @router.delete("/{producto_id}", response_model=ProductoLeer)
 async def eliminar_producto(producto_id: int, session: SessionDep):
+    """
+        Eliminar un producto.
+
+        Borra de la base de datos el producto correspondiente al identificador proporcionado.
+
+        Args:
+            producto_id (int): ID del producto a eliminar.
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+        Returns:
+            ProductoLeer: Representación del producto eliminado.
+
+        Raises:
+            HTTPException: 404 si el producto no existe.
+        """
     producto = session.get(Producto, producto_id)
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
