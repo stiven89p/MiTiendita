@@ -3,7 +3,7 @@ from datetime import datetime, timezone, timedelta
 from sqlmodel import select
 from fastapi import APIRouter, HTTPException, Form, Query
 from db import SessionDep
-from modelos.productos import Producto, ProductoActualizar, ProductoLeer
+from modelos.productos import Producto, ProductoLeer
 from modelos.categoria import Categoria
 
 router = APIRouter(

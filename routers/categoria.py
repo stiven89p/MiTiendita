@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, Form
 from db import SessionDep
-from modelos.categoria import Categoria, CategoriaActualizar, CategoriaLeer
+from modelos.categoria import Categoria, CategoriaLeer
 
 router = APIRouter(
     prefix="/categorias",
