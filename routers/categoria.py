@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, Form
+from datetime import datetime, timezone, timedelta
 from db import SessionDep
 from modelos.categoria import Categoria, CategoriaLeer
 
@@ -147,6 +148,8 @@ async def actualizar_categoria(categoria_id: int,
         categoria.descripcion = descripcion
     if activo is not None:
         categoria.activo = activo
+
+    categoria.fecha_actualizacion = datetime.now(timezone(timedelta(hours=-5)))
 
     session.add(categoria)
     session.commit()
