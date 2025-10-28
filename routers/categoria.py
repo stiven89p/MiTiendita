@@ -67,7 +67,7 @@ async def leer_categorias(session: SessionDep):
         raise HTTPException(status_code=404, detail="No se encontraron categorías")
     return categorias
 
-@router.get("/{categoria_id}/", response_model=Categoria)
+@router.get("/categoria_id/{categoria_id}/", response_model=Categoria)
 async def leer_categoria_id(categoria_id: int, session: SessionDep):
     """
     Leer una categoría por ID.
@@ -88,6 +88,28 @@ async def leer_categoria_id(categoria_id: int, session: SessionDep):
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return categoria
+
+@router.get("/activo/{activo}/", response_model=List[Categoria])
+async def leer_categorias_activo(activo: bool, session: SessionDep):
+    """
+    Leer categorías por estado activo.
+
+    Obtiene todas las categorías que coinciden con el estado activo proporcionado.
+
+    Args:
+        activo (bool): Estado activo para filtrar categorías.
+        session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+    Returns:
+        List[Categoria]: Lista de instancias de `Categoria` que coinciden con el estado activo.
+
+    Raises:
+        HTTPException: 404 si no se encuentran categorías.
+    """
+    categorias = session.query(Categoria).filter(Categoria.activo==activo).all()
+    if not categorias:
+        raise HTTPException(status_code=404, detail="No se encontraron categorías")
+    return categorias
 
 @router.put("/{categoria_id}/", response_model=Categoria)
 async def actualizar_categoria(categoria_id: int,
