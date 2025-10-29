@@ -12,6 +12,7 @@ class CategoriaBase(SQLModel):
 class Categoria(CategoriaBase, table=True):
     categoria_id: Optional[int] = Field(default=None, primary_key=True)
     productos: List["Producto"] = Relationship(back_populates="categoria")
+    eliminacion: bool = True
 
 
 class CategoriaActualizar(SQLModel):
@@ -20,10 +21,13 @@ class CategoriaActualizar(SQLModel):
     fecha_actualizacion: Optional[datetime] = Field(default_factory=datetime.utcnow)
     activo: Optional[bool] = None
 
-class CategoriaLeer(CategoriaBase):
-    pass
+class CategoriaLeer(SQLModel):
+    categoria_id: Optional[int]
+    nombre: str
+    descripcion: Optional[str] = None
+    fecha_creacion: datetime = Field(default_factory=datetime.utcnow)
+    fecha_actualizacion: datetime = Field(default_factory=datetime.utcnow)
+    activo: bool = True
 
-class CategoriaEliminar(CategoriaBase):
-    activo: bool = False
 
 from modelos.productos import Producto

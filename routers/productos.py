@@ -11,7 +11,7 @@ router = APIRouter(
     tags=["productos"],
 )
 
-@router.post("/", response_model=Producto)
+@router.post("/", response_model=ProductoLeer)
 async def crear_producto(session: SessionDep,
                          nombre: str = Form(...),
                          descripcion: str = Form(None),
@@ -72,7 +72,7 @@ async def crear_producto(session: SessionDep,
     session.refresh(nuevo_producto)
     return nuevo_producto
 
-@router.get("/", response_model=List[Producto])
+@router.get("/", response_model=List[ProductoLeer])
 async def leer_productos(session: SessionDep):
     productos = (
         session.query(Producto)
@@ -98,7 +98,7 @@ async def leer_productos(session: SessionDep):
         raise HTTPException(status_code=404, detail="No se encontraron productos")
     return productos
 
-@router.get("/precio/", response_model=List[Producto])
+@router.get("/precio/", response_model=List[ProductoLeer])
 async def leer_productos_por_precio(
     session: SessionDep,
     precio_min: int = Query(..., gt=0),
@@ -136,7 +136,7 @@ async def leer_productos_por_precio(
         )
     return productos
 
-@router.get("/stock/", response_model=List[Producto])
+@router.get("/stock/", response_model=List[ProductoLeer])
 async def leer_productos_por_stock(
     session: SessionDep,
     stock_min: int = Query(..., gt=0),
@@ -174,7 +174,7 @@ async def leer_productos_por_stock(
         )
     return productos
 
-@router.get("/{producto_id}/", response_model=Producto)
+@router.get("/{producto_id}/", response_model=ProductoLeer)
 async def leer_producto_por_id(producto_id: int, session: SessionDep):
     """
         Leer un producto por ID.
@@ -196,7 +196,7 @@ async def leer_producto_por_id(producto_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     return producto
 
-@router.get("/categoria/{categoria_id}/", response_model=List[Producto])
+@router.get("/categoria/{categoria_id}/", response_model=List[ProductoLeer])
 async def leer_productos_por_categoria(categoria_id: int, session: SessionDep):
     """
         Leer productos por categoría.
@@ -218,7 +218,7 @@ async def leer_productos_por_categoria(categoria_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="No se encontraron productos para esta categoria")
     return productos
 
-@router.get("/activo/{activo}/", response_model=List[Producto])
+@router.get("/activo/{activo}/", response_model=List[ProductoLeer])
 async def leer_productos_por_estado(activo: bool, session: SessionDep):
     """
         Leer productos por estado activo.
@@ -320,7 +320,7 @@ async def eliminar_producto(producto_id: int, session: SessionDep):
     if not producto:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    session.delete(producto)
+    producto.eliminacion = False
     session.commit()
     return producto
 

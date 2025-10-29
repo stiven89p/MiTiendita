@@ -47,7 +47,7 @@ async def crear_categoria(session: SessionDep,
     session.refresh(nueva_categoria)
     return nueva_categoria
 
-@router.get("/", response_model=List[Categoria])
+@router.get("/", response_model=List[CategoriaLeer])
 async def leer_categorias(session: SessionDep):
     """
     Leer categorías activas.
@@ -90,7 +90,7 @@ async def leer_categoria_id(categoria_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return categoria
 
-@router.get("/activo/{activo}/", response_model=List[Categoria])
+@router.get("/activo/{activo}/", response_model=List[CategoriaLeer])
 async def leer_categorias_activo(activo: bool, session: SessionDep):
     """
     Leer categorías por estado activo.
@@ -159,29 +159,15 @@ async def actualizar_categoria(categoria_id: int,
 
 @router.delete("/{categoria_id}", response_model=Categoria)
 async def eliminar_categoria(categoria_id: int, session: SessionDep):
-    """
-    Eliminar una categoría y sus productos asociados.
-
-    Borra la categoría indicada y elimina los productos relacionados antes de borrar la categoría.
-
-    Args:
-        categoria_id (int): ID de la categoría a eliminar.
-        session (SessionDep): Dependencia que provee la sesión de la base de datos.
-
-    Returns:
-        Categoria: Instancia de `Categoria` eliminada (tal como estaba antes del borrado).
-
-    Raises:
-        HTTPException: 404 si la categoría no existe.
-    """
     categoria = session.get(Categoria, categoria_id)
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
 
     for producto in categoria.productos:
-        session.delete(producto)
+        producto.eliminacion = False
 
-    session.delete(categoria)
+    categoria.eliminacion = False
+    categoria.activo = False
     session.commit()
     return categoria
 
