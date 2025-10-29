@@ -34,11 +34,10 @@ async def crear_categoria(session: SessionDep,
         """
 
     nueva_categoria = Categoria(
-        nombre=nombre,
+        nombre=nombre.upper(),
         descripcion=descripcion,
         activo=activo
     )
-
     categorias_comprobacion = session.query(Categoria).filter(Categoria.nombre==nueva_categoria.nombre).all()
     if categorias_comprobacion:
         raise HTTPException(status_code=400, detail="La categoría con ese nombre ya existe")
