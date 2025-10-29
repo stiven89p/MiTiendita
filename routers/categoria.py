@@ -164,6 +164,10 @@ async def eliminar_categoria(categoria_id: int, session: SessionDep):
 
     for producto in categoria.productos:
         producto.eliminacion = False
+        producto.eliminacion = False
+        producto.activo = False
+        producto.precio = 0
+        producto.stock = 0
 
     categoria.eliminacion = False
     categoria.activo = False

@@ -321,6 +321,10 @@ async def eliminar_producto(producto_id: int, session: SessionDep):
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
     producto.eliminacion = False
+    producto.activo = False
+    producto.precio = 0
+    producto.stock = 0
+
     session.commit()
     return producto
 
