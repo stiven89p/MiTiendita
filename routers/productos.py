@@ -241,6 +241,29 @@ async def leer_productos_por_estado(activo: bool, session: SessionDep):
     return productos
 
 
+@router.get("/categoria/{categoria_id}/activo/{activo}/")
+async def leer_productos_por_categoria_y_estado(categoria_id: int, activo: bool, session: SessionDep):
+    """
+        Leer productos por categoría y estado activo.
+
+        Obtiene todos los productos que pertenecen a una categoría específica y que coinciden con el estado de actividad indicado.
+
+        Args:
+            categoria_id (int): ID de la categoría a consultar.
+            activo (bool): Estado de los productos a consultar.
+            session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+        Returns:
+            List[Producto]: Lista de productos que coinciden con la categoría y el estado solicitado.
+
+        Raises:
+            HTTPException: 404 si no se encuentran productos que coincidan con los criterios.
+        """
+    productos = session.query(Producto).filter(Producto.categoria_id==categoria_id, Producto.activo==activo).all()
+    if not productos:
+        raise HTTPException(status_code=404, detail="No se encontraron productos con estos criterios")
+    return productos
+
 
 @router.put("/{producto_id}/", response_model=Producto)
 async def actualizar_producto(producto_id: int,
