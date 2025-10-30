@@ -132,7 +132,7 @@ async def leer_ventas(session: SessionDep):
     return ventas
 
 @router.get("/{venta_id}/", response_model=List[VentaResponse])
-async def leer_ventas(session: SessionDep, venta_id: int):
+async def leer_venta(session: SessionDep, venta_id: int):
     """
         Leer una venta por ID.
 

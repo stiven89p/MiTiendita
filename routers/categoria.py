@@ -2,7 +2,10 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Form
 from datetime import datetime, timezone, timedelta
 from db import SessionDep
-from modelos.categoria import Categoria, CategoriaLeer
+from modelos.categoria import Categoria, CategoriaLeer, CategoriaConProductos
+from modelos.productos import Producto
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
 router = APIRouter(
     prefix="/categorias",
@@ -110,6 +113,29 @@ async def leer_categorias_activo(activo: bool, session: SessionDep):
     if not categorias:
         raise HTTPException(status_code=404, detail="No se encontraron categorías")
     return categorias
+
+@router.get("/{categoria_id}/productos/", response_model=CategoriaConProductos)
+async def leer_categoria_con_productos(categoria_id: int, session: SessionDep):
+    """
+    Leer una categoría junto con sus productos.
+
+    Recupera una categoría por su ID e incluye los productos asociados.
+
+    Args:
+        categoria_id (int): ID de la categoría a recuperar.
+        session (SessionDep): Dependencia que provee la sesión de la base de datos.
+
+    Returns:
+        Categoria: Instancia de `Categoria` con sus productos asociados.
+
+    Raises:
+        HTTPException: 404 si la categoría no existe.
+    """
+    query = select(Categoria).options(selectinload(Categoria.productos).selectinload(Producto.categoria)).where(Categoria.categoria_id == categoria_id)
+    categoria = session.exec(query).first()
+    if not categoria:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    return categoria
 
 @router.put("/{categoria_id}/", response_model=Categoria)
 async def actualizar_categoria(categoria_id: int,

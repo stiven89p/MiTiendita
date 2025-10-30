@@ -29,5 +29,8 @@ class CategoriaLeer(SQLModel):
     fecha_actualizacion: datetime = Field(default_factory=datetime.utcnow)
     activo: bool = True
 
+class CategoriaConProductos(CategoriaLeer):
+    productos: List["ProductoLeer"] = []
 
-from modelos.productos import Producto
+
+from modelos.productos import Producto, ProductoLeer
